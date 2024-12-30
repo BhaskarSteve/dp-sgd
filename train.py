@@ -5,7 +5,7 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 from opacus import PrivacyEngine
 
-from models import CNN
+from models import CNNMnist, CNNCifar
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, default='mnist')
@@ -36,7 +36,14 @@ else:
     device = torch.device("cpu")
 print('Device: ', device, flush=True)
 
-model = CNN(args=args).to(device)
+if args.dataset == 'mnist' or args.dataset == 'fmnist':
+    model = CNNMnist(args=args)
+elif args.dataset == 'cifar':
+    model = CNNCifar(args=args)
+else:
+    exit('Error: unrecognized dataset')
+model.to(device)
+
 data_dir = './data'
 if args.dataset == 'mnist':
     apply_transform = transforms.Compose([
@@ -54,6 +61,14 @@ elif args.dataset == 'fmnist':
                                         transform=apply_transform)
     test_dataset = datasets.FashionMNIST(data_dir, train=False, download=True,
                                         transform=apply_transform)
+elif args.dataset == 'cifar':
+    apply_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
+    train_dataset = datasets.CIFAR10(data_dir, train=True, download=True,
+                                    transform=apply_transform)
+    test_dataset = datasets.CIFAR10(data_dir, train=False, download=True,
+                                    transform=apply_transform)
 else:
     exit('Error: unrecognized dataset')
 
