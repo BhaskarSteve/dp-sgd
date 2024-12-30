@@ -79,3 +79,51 @@ class TemperedSigmoid(nn.Module):
 
     def forward(self, x):
         return self.scale / (1 + torch.exp(-self.temp * x)) - self.offset
+
+class ScatterLinear(nn.Module):
+    def __init__(self, input_dim, output_dim, num_groups):
+        super(ScatterLinear, self).__init__()
+        self.fc = nn.Linear(input_dim, output_dim)
+        self.gn = nn.GroupNorm(num_groups, input_dim)
+
+    def forward(self, x):
+        x = self.fc(self.gn(x))
+        return F.log_softmax(x, dim=1)
+
+class ScatterCNN(nn.Module):
+    def __init__(self, dataset, input_dim, output_dim, num_groups):
+        super(ScatterCNN, self).__init__()
+        if dataset == 'mnist' or dataset == 'fmnist':
+            self.conv1 = nn.Conv2d(in_channels=input_dim, out_channels=16, kernel_size=3, stride=2, padding=1)
+            self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding=1)
+            self.pool1 = nn.MaxPool2d(kernel_size=2, stride=1)
+            self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+            self.fc1 = nn.Linear(32 * 2 * 2, 32)
+            self.fc2 = nn.Linear(32, output_dim)
+        elif dataset == 'cifar':
+            self.conv1 = nn.Conv2d(in_channels=input_dim, out_channels=64, kernel_size=3, stride=1, padding=1)
+            self.conv2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1)
+            self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+            self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+            self.fc1 = nn.Linear(64 * 2 * 2, 10)
+        else:
+            raise ValueError('Unknown dataset: {}'.format(dataset))
+        self.gn = nn.GroupNorm(num_groups, input_dim)
+        self.act = nn.Tanh()
+        self.dataset = dataset
+
+    def forward(self, x):
+        if self.dataset == 'mnist' or self.dataset == 'fmnist':
+            x = self.gn(x)
+            x = self.pool1(self.act(self.conv1(x)))
+            x = self.pool2(self.act(self.conv2(x)))
+            x = x.view(-1, 32 * 2 * 2)
+            x = self.act(self.fc1(x))
+            x = self.fc2(x)
+        elif self.dataset == 'cifar':
+            x = self.gn(x)
+            x = self.pool1(self.act(self.conv1(x)))
+            x = self.pool2(self.act(self.conv2(x)))
+            x = x.view(-1, 64 * 2 * 2)
+            x = self.fc1(x)
+        return F.log_softmax(x, dim=1)
