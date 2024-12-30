@@ -17,6 +17,8 @@ class CNNMnist(nn.Module):
             self.act = nn.ReLU()
         elif args.activation == 'tanh':
             self.act = nn.Tanh()
+        elif args.activation == 'tempered':
+            self.act = TemperedSigmoid(args)
         else:
             raise ValueError('Unknown activation function: {}'.format(args.activation))
 
@@ -25,6 +27,7 @@ class CNNMnist(nn.Module):
         x = self.pool2(self.act(self.conv2(x)))
         x = x.view(x.size(0), -1)
         x = F.relu(self.fc1(x))
+        # x = self.act(self.fc2(x))
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
@@ -47,6 +50,8 @@ class CNNCifar(nn.Module):
             self.act = nn.ReLU()
         elif args.activation == 'tanh':
             self.act = nn.Tanh()
+        elif args.activation == 'tempered':
+            self.act = TemperedSigmoid(args)
         else:
             raise ValueError('Unknown activation function: {}'.format(args.activation))
 
@@ -64,3 +69,13 @@ class CNNCifar(nn.Module):
         x = self.avgpool(self.conv8(x))
         x = x.view(x.size(0), -1)
         return F.log_softmax(x, dim=1)
+
+class TemperedSigmoid(nn.Module):
+    def __init__(self, args):
+        super(TemperedSigmoid, self).__init__()
+        self.scale = args.scale 
+        self.temp = args.temp
+        self.offset = args.offset
+
+    def forward(self, x):
+        return self.scale / (1 + torch.exp(-self.temp * x)) - self.offset

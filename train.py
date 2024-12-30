@@ -18,12 +18,16 @@ parser.add_argument('--lr', type=float, default=0.1, help='learning rate')
 parser.add_argument('--momentum', type=float, default=0.9, help='SGD momentum')
 parser.add_argument('--weight_decay', type=float, default=0.0001, help='Adam weight decay')
 parser.add_argument('--seed', type=int, default=1, help='random seed')
+
 parser.add_argument('--activation', type=str, default='relu', help='activation function')
+parser.add_argument('--scale', type=float, default=2.0, help='scale for tempered sigmoid')
+parser.add_argument('--temp', type=float, default=2.0, help='temperature for tempered sigmoid')
+parser.add_argument('--offset', type=float, default=1.0, help='offset for tempered sigmoid')
 
 parser.add_argument('--disable_dp', action='store_true', help='disable differential privacy')
 parser.add_argument('--epsilon', type=float, default=2.93, help='epsilon for (epsilon, delta)-DP')
 parser.add_argument('--delta', type=float, default=1e-5, help='delta for (epsilon, delta)-DP')
-parser.add_argument('--max_norm', type=float, default=1.0, help='clip per-sample gradients')
+parser.add_argument('--max_norm', type=float, default=0.1, help='clip per-sample gradients')
 parser.add_argument('--sigma', type=float, default=1.0, help='noise multiplier')
 args = parser.parse_args()
 
@@ -76,7 +80,7 @@ if args.optimizer == 'sgd':
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
                                 momentum=args.momentum)
 elif args.optimizer == 'adam':
-    args.lr = 0.001
+    args.lr = 1e-4
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr,
                                     weight_decay=args.weight_decay)
 
