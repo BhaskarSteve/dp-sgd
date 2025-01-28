@@ -64,6 +64,6 @@ This implementation is inspired by the following papers:
 
 1. [**Deep Learning with Differential Privacy**](https://arxiv.org/abs/1607.00133) Abadi, M. et al. (2016).
 
-2. [**Tempered Sigmoid Activations for Deep Learning with Differential Privacy**](https://arxiv.org/pdf/2007.14191) Papernot, N. (2020).
+2. [**Tempered Sigmoid Activations for Deep Learning with Differential Privacy**](https://arxiv.org/pdf/2007.14191) Papernot, N. et al. (2020).
 
 3. [**Differentially private learning needs better features (or much more data)**](https://arxiv.org/pdf/2011.11660) Tramer, F., & Boneh, D. (2020).
